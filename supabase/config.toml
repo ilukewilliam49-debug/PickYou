@@ -91,3 +91,6 @@ verify_jwt = false
 verify_jwt = false
 
 
+[functions.test-ride-flow]
+verify_jwt = true
+

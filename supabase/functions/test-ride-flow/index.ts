@@ -58,6 +58,27 @@ serve(async (req) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const admin = createClient(supabaseUrl, serviceKey);
 
+    // ---- Admin-only guard ------------------------------------------------
+    // This function drives service-role writes against real rides, so it must
+    // never be reachable by anonymous or ordinary authenticated callers.
+    const authHeader = req.headers.get("Authorization") ?? "";
+    const jwt = authHeader.replace(/^Bearer\s+/i, "");
+    if (!jwt) {
+      return jsonRes({ error: "Unauthorized" }, 401);
+    }
+    const { data: userData, error: userErr } = await admin.auth.getUser(jwt);
+    if (userErr || !userData?.user) {
+      return jsonRes({ error: "Unauthorized" }, 401);
+    }
+    const { data: isAdmin, error: roleErr } = await admin.rpc("has_role", {
+      _user_id: userData.user.id,
+      _role: "admin",
+    });
+    if (roleErr || isAdmin !== true) {
+      return jsonRes({ error: "Forbidden: admin role required" }, 403);
+    }
+
+
     // ── Step 0: Find a rider and a taxi-capable driver ─────────────
     let t = Date.now();
     const { data: rider, error: riderErr } = await admin

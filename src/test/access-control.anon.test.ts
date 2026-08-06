@@ -122,9 +122,15 @@ async function callRpc(name: string, args: Record<string, unknown>, token?: stri
   return { status: res.status, body: await res.text() };
 }
 
-/** A denied response is either a 401/403, or a 404 "not exposed" from PostgREST. */
+/**
+ * A denied response is a 401/403, a 404 "not exposed" from PostgREST, or a
+ * 400 raised by an in-function auth guard ("Not authorized" / "Not authenticated").
+ */
 function isDenied(r: { status: number; body: string }) {
   if (r.status === 401 || r.status === 403) return true;
+  if (r.status === 400 && /not authori[sz]ed|not authenticated/i.test(r.body)) {
+    return true;
+  }
   // PostgREST hides objects the role has no privilege on.
   return (
     r.status === 404 &&

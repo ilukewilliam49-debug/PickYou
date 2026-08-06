@@ -1,0 +1,13 @@
+REVOKE EXECUTE ON FUNCTION public.accept_ride(uuid, uuid) FROM anon;
+REVOKE EXECUTE ON FUNCTION public.auto_offline_overdue_shifts() FROM anon;
+REVOKE EXECUTE ON FUNCTION public.auto_offline_stale_drivers() FROM anon;
+REVOKE EXECUTE ON FUNCTION public.check_notification_rate_limit(text, integer, integer) FROM anon;
+REVOKE EXECUTE ON FUNCTION public.is_driver_live(uuid) FROM anon;
+REVOKE EXECUTE ON FUNCTION public.touch_driver_seen() FROM anon;
+REVOKE EXECUTE ON FUNCTION public.driver_can_serve(uuid, public.service_type) FROM anon;
+REVOKE EXECUTE ON FUNCTION public.driver_shift_within_limit(uuid) FROM anon;
+REVOKE EXECUTE ON FUNCTION public.authorize_realtime_channel(text, uuid) FROM anon;
+REVOKE EXECUTE ON FUNCTION public.has_role(uuid, public.app_role) FROM anon;
+REVOKE EXECUTE ON FUNCTION public.has_app_role(uuid, public.app_role) FROM anon;
+REVOKE EXECUTE ON FUNCTION public.is_org_admin(uuid, uuid) FROM anon;
+REVOKE EXECUTE ON FUNCTION public.ensure_ride_track_token(uuid) FROM anon;

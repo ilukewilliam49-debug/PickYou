@@ -1,42 +1,51 @@
+Disconnect Lovable Cloud from project
 
+## Goal
+Disconnect the Lovable Cloud-managed backend from this project so it can be transferred to a new owner without carrying over the current database, auth, storage, and functions.
 
-## Driver Application Email Notifications
+## Current state
+- Lovable Cloud is **managed by Lovable** and currently **active and healthy**.
+- The project uses Cloud-backed features: auth, database, storage, edge functions, and possibly configured secrets (Stripe, OneSignal, Twilio, Resend).
+- Disconnecting is a destructive, irreversible action that will delete all cloud data.
 
-**Short answer to your question:** No — right now you do **not** receive an email when a driver applies. Only the **business/corporate** application sends an email to `contact@pickyou.ca`. Drivers just submit their documents and an in-app admin notification is created (no email).
+## Steps
 
-Here's what I'll add so you get email alerts the same way you do for business applications.
+1. **Verify workspace admin access**
+   - Only a workspace admin can disconnect Cloud.
+   - Confirm you are an admin at: Workspace Settings → Access → People.
 
-### What you'll get
+2. **Export / back up data you need to keep**
+   - Open Cloud → Advanced → Export data to request a database export.
+   - Manually download any critical storage files, edge function code, or secrets you want to preserve.
 
-1. **Email to admin (you, at `contact@pickyou.ca`)** when a driver finishes their onboarding submission, with:
-   - Driver name, email, phone
-   - Vehicle (year, make, model, color, plate, type)
-   - Number of documents uploaded
-   - Submitted timestamp
-   - One-click link to `/admin/verifications` to review
+3. **Open the disconnect control**
+   - Navigate to: Cloud → Overview → Advanced settings.
+   - Click the **Disconnect** option for Lovable Cloud.
 
-2. **Confirmation email to the driver** acknowledging their application is received and under review (sets expectation: 1–3 business days, what happens next).
+4. **Confirm disconnection and understand consequences**
+   - Disconnecting permanently deletes:
+     - Database tables and rows
+     - Auth users and sessions
+     - Storage buckets and files
+     - Edge functions and secrets
+   - Any app features that rely on these will stop working until a new backend is attached.
 
-### How it will work
+5. **Disable Cloud for future projects (optional)**
+   - If you only want to prevent new projects from using Cloud, go to:
+     Connectors → Lovable Cloud → Disable Cloud.
+   - This does **not** remove Cloud from the current project.
 
-- Two new React Email templates in `supabase/functions/_shared/transactional-email-templates/`:
-  - `driver-application-notification.tsx` → sent to admin
-  - `driver-application-confirmation.tsx` → sent to applicant
-- Both registered in `registry.ts`.
-- Triggered from `src/pages/DriverOnboarding.tsx` inside `handleSubmit()` — fired exactly once when the driver hits "Submit application", using an `idempotencyKey` of `driver-app-${profile.id}-${timestamp-bucket}` so retries never duplicate.
-- Uses the existing `send-transactional-email` Edge Function (no new function created — per platform rules).
-- Branded with PickYou dark theme accent (#2F80ED on white email body, per email standards).
+6. **After disconnection, clean up app code (optional)**
+   - Remove or guard Cloud-dependent UI paths (driver/rider dashboards, auth-gated pages, file uploads, etc.) if the project will run without a backend.
+   - If a new owner will attach their own Supabase/Lovable Cloud later, leave the existing code and integrations in place; they can rebind the project after connecting.
 
-### Technical notes
+## Technical details
+- Cloud status: managed by Lovable, instance size Tiny, active and healthy.
+- Disconnecting is done through the Lovable product UI, not via code changes in this repository.
+- If the Disconnect button is unavailable because you are not a workspace admin, ask an admin to perform the disconnect.
+- No migration or source-code edits are required before disconnecting; the operation removes backend bindings and cloud-hosted data only.
 
-- Email infrastructure is already provisioned (corporate-application-notification works), so no `setup_email_infra` call needed — only `deploy_edge_functions(["send-transactional-email"])` after registry update.
-- Admin recipient is hardcoded to `contact@pickyou.ca` (matching the existing corporate flow). If you'd like a different address or multiple recipients later, that's a one-line change.
-- Both emails are strictly transactional (1:1, triggered by the applicant's own action) — fully compliant with the platform's email policy.
-
-### Files to be created / edited
-
-- **Create:** `supabase/functions/_shared/transactional-email-templates/driver-application-notification.tsx`
-- **Create:** `supabase/functions/_shared/transactional-email-templates/driver-application-confirmation.tsx`
-- **Edit:** `supabase/functions/_shared/transactional-email-templates/registry.ts` (register both)
-- **Edit:** `src/pages/DriverOnboarding.tsx` (invoke both emails inside `handleSubmit`)
-
+## Success criteria
+- Lovable Cloud is disconnected from the project.
+- Database, storage, auth, and functions are removed from the project.
+- New owner can connect their own billing/credits/backend without inheriting the old cloud data.
